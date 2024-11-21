@@ -8,50 +8,10 @@ import org.apache.ibatis.annotations.Mapper;
 public interface LearningLessonMapper extends BaseMapper<LearningLesson>
     {
         /**
-         * delete by primary key
+         * 查询总计划数量
          *
-         * @param id primaryKey
-         * @return deleteCount
+         * @param userId 用户id
+         * @return {@link Integer } 总计划数量
          */
-        int deleteByPrimaryKey(Long id);
-        
-        /**
-         * insert record to table
-         *
-         * @param record the record
-         * @return insert count
-         */
-        int insert(LearningLesson record);
-        
-        /**
-         * insert record to table selective
-         *
-         * @param record the record
-         * @return insert count
-         */
-        int insertSelective(LearningLesson record);
-        
-        /**
-         * select by primary key
-         *
-         * @param id primary key
-         * @return object by primary key
-         */
-        LearningLesson selectByPrimaryKey(Long id);
-        
-        /**
-         * update record selective
-         *
-         * @param record the updated record
-         * @return update count
-         */
-        int updateByPrimaryKeySelective(LearningLesson record);
-        
-        /**
-         * update record
-         *
-         * @param record the updated record
-         * @return update count
-         */
-        int updateByPrimaryKey(LearningLesson record);
+        Integer queryTotalPlan(Long userId);
     }

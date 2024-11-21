@@ -5,6 +5,7 @@ import com.tianji.common.domain.dto.PageDTO;
 import com.tianji.common.domain.query.PageQuery;
 import com.tianji.learning.domain.po.LearningLesson;
 import com.tianji.learning.domain.vo.LearningLessonVO;
+import com.tianji.learning.domain.vo.LearningPlanPageVO;
 import com.tianji.learning.domain.vo.LessonStatusVO;
 
 import java.util.List;
@@ -72,4 +73,29 @@ public interface ILearningLessonService extends IService<LearningLesson>
          * @param courseId 课程id
          */
         void deleteExpiredLessons(Long courseId);
+        
+        /**
+         * 根据用户id和课程id查询选中的课程
+         *
+         * @param userId   用户id
+         * @param courseId 课程id
+         * @return {@link LearningLesson } 选中的课程
+         */
+        LearningLesson selectOne(Long userId, Long courseId);
+        
+        /**
+         * 创建学习计划
+         *
+         * @param courseId 课程id
+         * @param freq     频率
+         */
+        void createLearningPlan(Long courseId, Integer freq);
+        
+        /**
+         * 分页查询我计划
+         *
+         * @param query 查询
+         * @return {@link LearningPlanPageVO }
+         */
+        LearningPlanPageVO queryMyPlans(PageQuery query);
     }

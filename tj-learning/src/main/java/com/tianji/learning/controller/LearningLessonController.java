@@ -2,13 +2,17 @@ package com.tianji.learning.controller;
 
 import com.tianji.common.domain.dto.PageDTO;
 import com.tianji.common.domain.query.PageQuery;
+import com.tianji.learning.domain.dto.LearningPlanDTO;
 import com.tianji.learning.domain.vo.LearningLessonVO;
+import com.tianji.learning.domain.vo.LearningPlanPageVO;
 import com.tianji.learning.domain.vo.LessonStatusVO;
 import com.tianji.learning.service.ILearningLessonService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 /**
  * 学生课程表(learning_lesson)表控制层
@@ -101,5 +105,24 @@ public class LearningLessonController
         public void deleteUserLessons(@PathVariable Long courseId)
             {
                 lessonService.deleteExpiredLessons(courseId);
+            }
+        
+        /**
+         * 创建学习计划
+         *
+         * @param planDTO 计划 DTO
+         */
+        @ApiOperation("创建学习计划")
+        @PostMapping("/plans")
+        public void createLearningPlans(@Valid @RequestBody LearningPlanDTO planDTO)
+            {
+                lessonService.createLearningPlan(planDTO.getCourseId(), planDTO.getFreq());
+            }
+        
+        @ApiOperation("查询我的学习计划")
+        @GetMapping("/plans")
+        public LearningPlanPageVO queryMyPlans(PageQuery query)
+            {
+                return lessonService.queryMyPlans(query);
             }
     }
