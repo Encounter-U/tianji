@@ -3,8 +3,8 @@ package com.tianji.learning.task;
 import com.tianji.learning.domain.po.LearningLesson;
 import com.tianji.learning.enums.LessonStatus;
 import com.tianji.learning.service.ILearningLessonService;
-import groovy.util.logging.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +16,6 @@ import java.util.List;
  * @date 2024/11/21 16:47<br/>
  * 检查课程是否过期
  */
-@lombok.extern.slf4j.Slf4j
 @Component
 @Slf4j
 @RequiredArgsConstructor
