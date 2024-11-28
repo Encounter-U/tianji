@@ -119,6 +119,12 @@ public class LearningLessonController
                 lessonService.createLearningPlan(planDTO.getCourseId(), planDTO.getFreq());
             }
         
+        /**
+         * 查询我的学习计划计划
+         *
+         * @param query 查询
+         * @return {@link LearningPlanPageVO }
+         */
         @ApiOperation("查询我的学习计划")
         @GetMapping("/plans")
         public LearningPlanPageVO queryMyPlans(PageQuery query)
