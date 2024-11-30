@@ -31,7 +31,7 @@ public class LessonChangeListener
          * @param order 订购基本 DTO
          */
         @RabbitListener(bindings = @QueueBinding(
-                value = @Queue(name = "learning.lesson.queue", durable = "true"),
+                value = @Queue(name = "learning.lesson.pay.queue", durable = "true"),
                 exchange = @Exchange(name = MqConstants.Exchange.LEARNING_EXCHANGE, type = "topic"),
                 key = "lesson-key"
         ))

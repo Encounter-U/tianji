@@ -1,7 +1,9 @@
 package com.tianji.learning.service.impl;
 
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tianji.api.client.remark.RemarkClient;
 import com.tianji.api.client.user.UserClient;
 import com.tianji.api.dto.user.UserDTO;
 import com.tianji.common.domain.dto.PageDTO;
@@ -27,6 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.tianji.common.constants.Constant.DATA_FIELD_NAME_CREATE_TIME;
+import static com.tianji.common.constants.Constant.DATA_FIELD_NAME_LIKED_TIME;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -34,6 +39,7 @@ public class InteractionReplyServiceImpl extends ServiceImpl<InteractionReplyMap
     {
         private final IInteractionQuestionService questionService;
         private final UserClient userClient;
+        private final RemarkClient remarkClient;
         
         /**
          * 新增回答或评论
@@ -48,7 +54,7 @@ public class InteractionReplyServiceImpl extends ServiceImpl<InteractionReplyMap
                 reply.setUserId(UserContext.getUser());
                 save(reply);
                 //有上级回答id，更新回答表的回复数
-                if (reply.getAnswerId() == null)
+                if (reply.getAnswerId() != null)
                     {
                         String column = "reply_times";
                         lambdaUpdate()
@@ -84,12 +90,14 @@ public class InteractionReplyServiceImpl extends ServiceImpl<InteractionReplyMap
                     }
                 
                 //查询数据
-                //TODO Encounter 2024/11/28 15:32 按照点赞量排序，后续开发点赞业务后完善
                 Page<InteractionReply> page = lambdaQuery()
                         .eq(questionId != null, InteractionReply::getQuestionId, questionId)
-                        .eq(answerId != null, InteractionReply::getAnswerId, answerId)
+                        .eq(InteractionReply::getAnswerId, answerId == null ? 0L : answerId)
                         .eq(!isAdmin, InteractionReply::getHidden, false)
-                        .page(query.toMpPageDefaultSortByCreateTimeDesc());
+                        .page(query.toMpPage(
+                                new OrderItem(DATA_FIELD_NAME_CREATE_TIME, false),
+                                new OrderItem(DATA_FIELD_NAME_LIKED_TIME, true)));
+                //.page(query.toMpPageDefaultSortByCreateTimeDesc());
                 List<InteractionReply> records = page.getRecords();
                 
                 //没有数据直接返回
@@ -101,6 +109,8 @@ public class InteractionReplyServiceImpl extends ServiceImpl<InteractionReplyMap
                 //获取用户信息
                 Set<Long> userIds = new HashSet<>();
                 Set<Long> replyIds = new HashSet<>();
+                //存入业务id
+                Set<Long> bizIds = new HashSet<>();
                 for (InteractionReply reply : records)
                     {
                         //管理员可以看到所有回复，非管理员只能看到非匿名回复
@@ -110,6 +120,8 @@ public class InteractionReplyServiceImpl extends ServiceImpl<InteractionReplyMap
                             }
                         //回复id添加
                         replyIds.add(reply.getTargetReplyId());
+                        //业务id添加，只有评论和回答能点赞
+                        bizIds.add(reply.getId());
                     }
                 //查询用户信息并转为map
                 Map<Long, UserDTO> userMap = new HashMap<>();
@@ -122,13 +134,23 @@ public class InteractionReplyServiceImpl extends ServiceImpl<InteractionReplyMap
                 //查询回复的上级回答是否为匿名，若不是匿名则添加targetUserId到userIds
                 // replyIds.remove(0L)是为了去除回答的上级回答id，因为回答的上级回答id是0
                 replyIds.remove(0L);
+                Map<Long, UserDTO> targetUserMap = new HashMap<>();
                 if (CollUtils.isNotEmpty(replyIds))
                     {
                         Set<Long> targetUserIds = listByIds(replyIds).stream()
                                 .filter(r -> !r.getAnonymity())
                                 .map(InteractionReply::getTargetUserId)
                                 .collect(Collectors.toSet());
-                        userIds.addAll(targetUserIds);
+                        //userIds.addAll(targetUserIds);
+                        List<UserDTO> userDTOS = userClient.queryUserByIds(targetUserIds);
+                        targetUserMap = userDTOS.stream().collect(Collectors.toMap(UserDTO::getId, u -> u));
+                    }
+                
+                //查询点赞信息
+                Set<Long> likeList = null;
+                if (CollUtils.isNotEmpty(bizIds))
+                    {
+                        likeList = remarkClient.likeList(bizIds);
                     }
                 
                 //封装用户信息
@@ -150,12 +172,18 @@ public class InteractionReplyServiceImpl extends ServiceImpl<InteractionReplyMap
                         //目标用户信息
                         if (reply.getTargetUserId() != null)
                             {
-                                UserDTO targetUser = userMap.get(reply.getTargetUserId());
+                                UserDTO targetUser = targetUserMap.get(reply.getTargetUserId());
                                 if (targetUser != null)
                                     {
                                         //目标用户存在且非匿名，设置目标用户信息
                                         replyVO.setTargetUserName(targetUser.getName());
                                     }
+                            }
+                        
+                        //判断当前用户是否点赞
+                        if (likeList != null)
+                            {
+                                replyVO.setLiked(likeList.contains(reply.getId()));
                             }
                         
                         //添加到列表

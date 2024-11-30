@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tianji.remark.mapper.LikedRecordMapper">
+    <resultMap id="BaseResultMap" type="com.tianji.remark.domain.po.LikedRecord">
+        <!--@mbg.generated-->
+        <!--@Table tj_remark.liked_record-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="user_id" jdbcType="BIGINT" property="userId"/>
+        <result column="biz_id" jdbcType="BIGINT" property="bizId"/>
+        <result column="biz_type" jdbcType="VARCHAR" property="bizType"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id, user_id, biz_id, biz_type, create_time, update_time
+    </sql>
+</mapper>
