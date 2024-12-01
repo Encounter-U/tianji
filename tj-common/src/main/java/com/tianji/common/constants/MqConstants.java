@@ -71,5 +71,8 @@ public interface MqConstants {
         String REFUND_CHANGE = "refund.status.change";
 
         String ORDER_DELAY_KEY = "delay.order.query";
+        
+        /*删除点赞的RoutingKey*/
+        String QA_LIKED_RECORD_DELETE_KEY = "qa.liked.record.delete";
     }
 }

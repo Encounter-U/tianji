@@ -1,5 +1,6 @@
 package com.tianji.remark.task;
 
+import com.tianji.remark.config.BizConfig;
 import com.tianji.remark.service.ILikedRecordService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,8 +18,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LikedTimesCheckTask
     {
-        private static final List<String> BIZ_TYPES = List.of("QA", "NOTE");
-        private static final int MAX_BIZ_SIZE = 30;
+        //private static final List<String> BIZ_TYPES = List.of("QA", "NOTE");
+        //private static final int MAX_BIZ_SIZE = 30;
+        private final BizConfig bizConfig;
         
         private final ILikedRecordService recordService;
         
@@ -29,9 +31,12 @@ public class LikedTimesCheckTask
         public void checkLikedTimes()
             {
                 //log.debug("开始检查点赞次数...");
-                for (String bizType : BIZ_TYPES)
+                List<String> bizTypes = bizConfig.getBizTypes();
+                int maxBizSize = bizConfig.getMaxBizSize();
+                //log.debug("获取到的业务类型：{}，最大业务规模：{}", bizTypes, maxBizSize);
+                for (String bizType : bizTypes)
                     {
-                        recordService.readLikedTimesAndSendMessage(bizType, MAX_BIZ_SIZE);
+                        recordService.readLikedTimesAndSendMessage(bizType, maxBizSize);
                     }
             }
     }

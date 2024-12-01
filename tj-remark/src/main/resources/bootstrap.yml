@@ -24,6 +24,8 @@ spring:
             refresh: false
           - data-id: shared-mq.yaml # 共享mq配置
             refresh: false
+          - data-id: biz-types.yaml # 业务配置
+            refresh: true # 是否支持动态刷新
 tj:
   swagger:
     enable: true

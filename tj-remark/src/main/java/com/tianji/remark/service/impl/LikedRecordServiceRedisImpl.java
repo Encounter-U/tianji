@@ -3,6 +3,7 @@ package com.tianji.remark.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tianji.common.autoconfigure.mq.RabbitMqHelper;
 import com.tianji.common.constants.MqConstants;
+import com.tianji.common.utils.BizContext;
 import com.tianji.common.utils.StringUtils;
 import com.tianji.common.utils.UserContext;
 import com.tianji.remark.constant.RedisConstants;
@@ -101,6 +102,29 @@ public class LikedRecordServiceRedisImpl extends ServiceImpl<LikedRecordMapper, 
                         return null;
                     });
                 
+                //如果redis里没有就查询数据库并存入redis
+                if (objects.isEmpty())
+                    {
+                        //查询数据库
+                        List<LikedRecord> likedRecords = lambdaQuery()
+                                .in(LikedRecord::getBizId, bizIds)
+                                .eq(LikedRecord::getUserId, userId)
+                                .list();
+                        
+                        //如果没有点赞记录
+                        if (likedRecords.isEmpty())
+                            {
+                                return Collections.emptySet();
+                            }
+                        
+                        //存入redis
+                        likedRecords.forEach(likedRecord ->
+                            {
+                                String key = RedisConstants.LIKE_BIZ_KEY_PREFIX + likedRecord.getBizId();
+                                redisTemplate.opsForSet().add(key, userId.toString());
+                            });
+                    }
+                
                 //返回结果
                 return IntStream.range(0, objects.size())
                         //过滤出点过赞的业务id
@@ -140,6 +164,9 @@ public class LikedRecordServiceRedisImpl extends ServiceImpl<LikedRecordMapper, 
                                 continue;
                             }
                         list.add(new LikedTimesDTO(Long.parseLong(bizId), likedTimes.intValue()));
+                        
+                        //把数据存储到线程上下文
+                        BizContext.addBiz(Long.parseLong(bizId), bizType);
                     }
                 
                 //发送消息
@@ -162,6 +189,8 @@ public class LikedRecordServiceRedisImpl extends ServiceImpl<LikedRecordMapper, 
                 String key = RedisConstants.LIKE_BIZ_KEY_PREFIX + likeRecord.getBizId();
                 //执行SADD操作
                 Long add = redisTemplate.opsForSet().add(key, userId.toString());
+                //把数据存储到线程上下文
+                BizContext.addBiz(likeRecord.getBizId(), likeRecord.getBizType());
                 //返回结果
                 return add != null && add > 0;
             }
@@ -178,8 +207,20 @@ public class LikedRecordServiceRedisImpl extends ServiceImpl<LikedRecordMapper, 
                 Long userId = UserContext.getUser();
                 //获取key
                 String key = RedisConstants.LIKE_BIZ_KEY_PREFIX + likeRecord.getBizId();
-                //执行SREM操作
-                Long remove = redisTemplate.opsForSet().remove(key, userId.toString());
+                Long remove = null;
+                if (redisTemplate.hasKey(key))
+                    {
+                        //执行SREM操作
+                        remove = redisTemplate.opsForSet().remove(key, userId.toString());
+                    }
+                
+                //删除线程上下文
+                BizContext.removeBiz(likeRecord.getBizId().toString());
+                //发送mq删除点赞记录
+                mqHelper.send(MqConstants.Exchange.LIKE_RECORD_EXCHANGE,
+                        MqConstants.Key.QA_LIKED_RECORD_DELETE_KEY,
+                        likeRecord.getBizId());
+                
                 //返回结果
                 return remove != null && remove > 0;
             }
