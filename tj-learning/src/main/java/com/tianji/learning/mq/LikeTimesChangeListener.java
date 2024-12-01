@@ -1,9 +1,9 @@
 package com.tianji.learning.mq;
 
+import com.tianji.api.dto.remark.LikedTimesDTO;
 import com.tianji.common.constants.MqConstants;
 import com.tianji.learning.domain.po.InteractionReply;
 import com.tianji.learning.service.IInteractionReplyService;
-import com.tianji.remark.domain.dto.LikedTimesDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.ExchangeTypes;

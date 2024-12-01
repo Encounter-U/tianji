@@ -1,6 +1,7 @@
 package com.tianji.remark.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tianji.api.dto.remark.LikedTimesDTO;
 import com.tianji.common.autoconfigure.mq.RabbitMqHelper;
 import com.tianji.common.constants.MqConstants;
 import com.tianji.common.utils.BizContext;
@@ -8,7 +9,6 @@ import com.tianji.common.utils.StringUtils;
 import com.tianji.common.utils.UserContext;
 import com.tianji.remark.constant.RedisConstants;
 import com.tianji.remark.domain.dto.LikeRecordFormDTO;
-import com.tianji.remark.domain.dto.LikedTimesDTO;
 import com.tianji.remark.domain.po.LikedRecord;
 import com.tianji.remark.mapper.LikedRecordMapper;
 import com.tianji.remark.service.ILikedRecordService;
