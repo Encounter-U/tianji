@@ -21,7 +21,6 @@ import com.tianji.learning.enums.QuestionStatus;
 import com.tianji.learning.mapper.InteractionReplyMapper;
 import com.tianji.learning.service.IInteractionQuestionService;
 import com.tianji.learning.service.IInteractionReplyService;
-import com.tianji.remark.constant.RedisConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -43,6 +42,7 @@ public class InteractionReplyServiceImpl extends ServiceImpl<InteractionReplyMap
         private final UserClient userClient;
         private final RemarkClient remarkClient;
         private final StringRedisTemplate redisTemplate;
+        private static final String LIKE_BIZ_KEY_PREFIX = "likes:set:biz:";
         
         /**
          * 新增回答或评论
@@ -184,7 +184,7 @@ public class InteractionReplyServiceImpl extends ServiceImpl<InteractionReplyMap
                             }
                         
                         //先查redis看是否有点赞总量，没有再查数据库
-                        Set<String> remark = redisTemplate.opsForSet().members(RedisConstants.LIKE_BIZ_KEY_PREFIX + reply.getId());
+                        Set<String> remark = redisTemplate.opsForSet().members(LIKE_BIZ_KEY_PREFIX + reply.getId());
                         if (remark != null && !remark.isEmpty())
                             {
                                 //点赞数
