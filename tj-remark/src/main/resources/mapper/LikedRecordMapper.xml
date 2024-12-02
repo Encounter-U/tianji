@@ -5,8 +5,8 @@
 
     <insert id="insertBatchIfNotExist">
         insert ignore into liked_record (user_id, biz_id, biz_type) values
-        <foreach collection="collection" item="record" separator="," open="(" close=")">
-            #{record.userId}, #{record.bizId}, #{record.bizType}
+        <foreach collection="collection" item="record" separator=",">
+            (#{record.userId}, #{record.bizId}, #{record.bizType})
         </foreach>
     </insert>
 </mapper>

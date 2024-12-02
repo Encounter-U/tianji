@@ -103,7 +103,20 @@ public class LikedRecordServiceRedisImpl extends ServiceImpl<LikedRecordMapper, 
                     });
                 
                 //如果redis里没有就查询数据库并存入redis
-                if (objects.isEmpty())
+                //flag为false说明redis里没有对应数据
+                boolean flag = false;
+                if (!objects.isEmpty())
+                    {
+                        for (Object object : objects)
+                            {
+                                if ((boolean) object)
+                                    {
+                                        flag = true;
+                                        break;
+                                    }
+                            }
+                    }
+                if (objects.isEmpty() || !flag)
                     {
                         //查询数据库
                         List<LikedRecord> likedRecords = lambdaQuery()
@@ -111,7 +124,7 @@ public class LikedRecordServiceRedisImpl extends ServiceImpl<LikedRecordMapper, 
                                 .eq(LikedRecord::getUserId, userId)
                                 .list();
                         
-                        //如果没有点赞记录
+                        //如果数据库也没有点赞记录，返回空的set
                         if (likedRecords.isEmpty())
                             {
                                 return Collections.emptySet();
@@ -207,12 +220,9 @@ public class LikedRecordServiceRedisImpl extends ServiceImpl<LikedRecordMapper, 
                 Long userId = UserContext.getUser();
                 //获取key
                 String key = RedisConstants.LIKE_BIZ_KEY_PREFIX + likeRecord.getBizId();
-                Long remove = null;
-                if (redisTemplate.hasKey(key))
-                    {
-                        //执行SREM操作
-                        remove = redisTemplate.opsForSet().remove(key, userId.toString());
-                    }
+                
+                //执行SREM操作
+                Long remove = redisTemplate.opsForSet().remove(key, userId.toString());
                 
                 //删除线程上下文
                 BizContext.removeBiz(likeRecord.getBizId().toString());
