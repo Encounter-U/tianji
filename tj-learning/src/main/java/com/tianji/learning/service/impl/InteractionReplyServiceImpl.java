@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tianji.api.client.remark.RemarkClient;
 import com.tianji.api.client.user.UserClient;
 import com.tianji.api.dto.user.UserDTO;
+import com.tianji.common.autoconfigure.mq.RabbitMqHelper;
+import com.tianji.common.constants.MqConstants;
 import com.tianji.common.domain.dto.PageDTO;
 import com.tianji.common.exceptions.BadRequestException;
 import com.tianji.common.utils.BeanUtils;
@@ -43,6 +45,7 @@ public class InteractionReplyServiceImpl extends ServiceImpl<InteractionReplyMap
         private final RemarkClient remarkClient;
         private final StringRedisTemplate redisTemplate;
         private static final String LIKE_BIZ_KEY_PREFIX = "likes:set:biz:";
+        private final RabbitMqHelper mqHelper;
         
         /**
          * 新增回答或评论
@@ -54,7 +57,8 @@ public class InteractionReplyServiceImpl extends ServiceImpl<InteractionReplyMap
         public void addReply(ReplyDTO replyDTO)
             {
                 InteractionReply reply = BeanUtils.copyBean(replyDTO, InteractionReply.class);
-                reply.setUserId(UserContext.getUser());
+                Long userId = UserContext.getUser();
+                reply.setUserId(userId);
                 save(reply);
                 //有上级回答id，更新回答表的回复数
                 if (reply.getAnswerId() != null)
@@ -73,6 +77,11 @@ public class InteractionReplyServiceImpl extends ServiceImpl<InteractionReplyMap
                         .set(InteractionQuestion::getLatestAnswerId, reply.getId())
                         .set(replyDTO.getIsStudent(), InteractionQuestion::getStatus, QuestionStatus.UN_CHECK.getValue())
                         .update();
+                
+                //当前用户新增回答或评论后，增加积分，发送mq消息
+                mqHelper.send(MqConstants.Exchange.LEARNING_EXCHANGE,
+                        MqConstants.Key.WRITE_REPLY,
+                        userId);
             }
         
         /**

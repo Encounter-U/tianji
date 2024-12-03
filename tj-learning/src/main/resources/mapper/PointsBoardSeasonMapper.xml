@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tianji.learning.mapper.PointsBoardSeasonMapper">
+    <resultMap id="BaseResultMap" type="com.tianji.learning.domain.po.PointsBoardSeason">
+        <!--@mbg.generated-->
+        <!--@Table tj_learning.points_board_season-->
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="begin_time" jdbcType="DATE" property="beginTime"/>
+        <result column="end_time" jdbcType="DATE" property="endTime"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id, `name`, begin_time, end_time
+    </sql>
+</mapper>

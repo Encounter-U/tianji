@@ -1,6 +1,7 @@
 package com.tianji.learning.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tianji.api.client.course.CatalogueClient;
@@ -15,6 +16,7 @@ import com.tianji.common.exceptions.BadRequestException;
 import com.tianji.common.utils.*;
 import com.tianji.learning.domain.po.LearningLesson;
 import com.tianji.learning.domain.po.LearningRecord;
+import com.tianji.learning.domain.po.PointsRecord;
 import com.tianji.learning.domain.vo.LearningLessonVO;
 import com.tianji.learning.domain.vo.LearningPlanPageVO;
 import com.tianji.learning.domain.vo.LearningPlanVO;
@@ -23,6 +25,7 @@ import com.tianji.learning.enums.LessonStatus;
 import com.tianji.learning.enums.PlanStatus;
 import com.tianji.learning.mapper.LearningLessonMapper;
 import com.tianji.learning.mapper.LearningRecordMapper;
+import com.tianji.learning.mapper.PointsRecordMapper;
 import com.tianji.learning.service.ILearningLessonService;
 import groovy.util.logging.Slf4j;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +51,7 @@ public class LearningLessonServiceImpl extends ServiceImpl<LearningLessonMapper,
         private final CatalogueClient catalogueClient;
         private final LearningLessonMapper lessonMapper;
         private final LearningRecordMapper recordMapper;
+        private final PointsRecordMapper pointsRecordMapper;
         
         /**
          * 添加用户课程
@@ -397,7 +401,20 @@ public class LearningLessonServiceImpl extends ServiceImpl<LearningLessonMapper,
                 Integer weekTotalPlan = getBaseMapper().queryTotalPlan(userId);
                 vo.setWeekTotalPlan(weekTotalPlan);
                 
-                //TODO Encounter 2024/11/21 15:55 本周学习积分
+                //本周学习积分
+                //当前日期
+                LocalDateTime firstDay = DateUtils.getWeekBeginTime(now);
+                LocalDateTime lastDay = DateUtils.getWeekEndTime(now);
+                //查询本周学习积分
+                QueryWrapper<PointsRecord> wrapper = new QueryWrapper<>();
+                //设置查询条件
+                wrapper.lambda()
+                        .eq(PointsRecord::getUserId, userId)
+                        .between(PointsRecord::getCreateTime, firstDay, lastDay);
+                //查询
+                Integer weekPoints = pointsRecordMapper.queryUserPointsByTypeAndDate(wrapper);
+                //设置本周学习积分
+                vo.setWeekPoints(weekPoints);
                 
                 //查询分页数据
                 Page<LearningLesson> lessonPage = lambdaQuery()

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tianji.learning.mapper.SignRecordMapper">
+    <resultMap id="BaseResultMap" type="com.tianji.learning.domain.po.SignRecord">
+        <!--@mbg.generated-->
+        <!--@Table tj_learning.sign_record-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="user_id" jdbcType="BIGINT" property="userId"/>
+        <result column="year" jdbcType="OTHER" property="year"/>
+        <result column="month" jdbcType="TINYINT" property="month"/>
+        <result column="date" jdbcType="DATE" property="date"/>
+        <result column="is_backup" jdbcType="BIT" property="isBackup"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id, user_id, `year`, `month`, `date`, is_backup
+    </sql>
+</mapper>

@@ -5,6 +5,8 @@ import com.tianji.api.client.course.CourseClient;
 import com.tianji.api.dto.course.CourseFullInfoDTO;
 import com.tianji.api.dto.leanring.LearningLessonDTO;
 import com.tianji.api.dto.leanring.LearningRecordDTO;
+import com.tianji.common.autoconfigure.mq.RabbitMqHelper;
+import com.tianji.common.constants.MqConstants;
 import com.tianji.common.exceptions.BizIllegalException;
 import com.tianji.common.exceptions.DbException;
 import com.tianji.common.utils.BeanUtils;
@@ -32,6 +34,7 @@ public class LearningRecordServiceImpl extends ServiceImpl<LearningRecordMapper,
         private final CourseClient courseClient;
         private final ILearningLessonService learningLessonService;
         private final LearningRecordDelayTaskHandler taskHandler;
+        private final RabbitMqHelper mqHelper;
         
         /**
          * 按课程查询学习记录
@@ -111,6 +114,13 @@ public class LearningRecordServiceImpl extends ServiceImpl<LearningRecordMapper,
                     {
                         return;
                     }
+                else
+                    {
+                        //有新增小节，新增积分
+                        mqHelper.send(MqConstants.Exchange.LEARNING_EXCHANGE,
+                                MqConstants.Key.LEARN_SECTION,
+                                userId);
+                    }
                 
                 //更新学习记录
                 handleLearningLessonData(formDTO);
@@ -130,7 +140,7 @@ public class LearningRecordServiceImpl extends ServiceImpl<LearningRecordMapper,
                         throw new BizIllegalException("课程不存在，无法更新数据！");
                     }
                 //标记是否有新增小节，默认不是
-                boolean lastSection = false;
+                boolean lastSection;
                 
                 //有，获取并判断当前小节是否存在
                 CourseFullInfoDTO courseInfo = courseClient.getCourseInfoById(lesson.getCourseId(), false, false);

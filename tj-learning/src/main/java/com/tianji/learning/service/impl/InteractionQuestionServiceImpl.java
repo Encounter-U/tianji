@@ -13,6 +13,8 @@ import com.tianji.api.dto.course.CataSimpleInfoDTO;
 import com.tianji.api.dto.course.CourseFullInfoDTO;
 import com.tianji.api.dto.course.CourseSimpleInfoDTO;
 import com.tianji.api.dto.user.UserDTO;
+import com.tianji.common.autoconfigure.mq.RabbitMqHelper;
+import com.tianji.common.constants.MqConstants;
 import com.tianji.common.domain.dto.PageDTO;
 import com.tianji.common.exceptions.BadRequestException;
 import com.tianji.common.utils.BeanUtils;
@@ -49,6 +51,7 @@ public class InteractionQuestionServiceImpl extends ServiceImpl<InteractionQuest
         private final CourseClient courseClient;
         private final CatalogueClient catalogueClient;
         private final CategoryCache categoryCache;
+        private final RabbitMqHelper mqHelper;
         
         /**
          * 保存问题
@@ -66,6 +69,11 @@ public class InteractionQuestionServiceImpl extends ServiceImpl<InteractionQuest
                 
                 //保存问题
                 save(question);
+                
+                //增加积分
+                mqHelper.send(MqConstants.Exchange.LEARNING_EXCHANGE,
+                        MqConstants.Key.WRITE_REPLY,
+                        userId);
             }
         
         /**
