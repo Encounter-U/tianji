@@ -7,16 +7,20 @@ import com.tianji.learning.domain.po.PointsBoardSeason;
 import com.tianji.learning.domain.vo.PointsBoardSeasonVO;
 import com.tianji.learning.mapper.PointsBoardSeasonMapper;
 import com.tianji.learning.service.IPointsBoardSeasonService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Encounter
  * @date 2024/12/02 15:29 <br>
  */
+@Slf4j
 @Service
 public class PointsBoardSeasonServiceImpl extends ServiceImpl<PointsBoardSeasonMapper, PointsBoardSeason> implements IPointsBoardSeasonService
     {
@@ -47,5 +51,23 @@ public class PointsBoardSeasonServiceImpl extends ServiceImpl<PointsBoardSeasonM
                         voList.add(vo);
                     }
                 return voList;
+            }
+        
+        /**
+         * 查询赛季id由时间
+         *
+         * @param time 时间
+         * @return {@link Integer }
+         */
+        @Override
+        public Integer querySeasonByTime(LocalDateTime time)
+            {
+                //查询赛季id
+                Optional<PointsBoardSeason> pointsBoardSeason = lambdaQuery()
+                        .le(PointsBoardSeason::getBeginTime, time)
+                        .ge(PointsBoardSeason::getEndTime, time)
+                        .oneOpt();
+                //返回赛季id
+                return pointsBoardSeason.map(PointsBoardSeason::getId).orElse(null);
             }
     }

@@ -3,6 +3,7 @@ package com.tianji.learning.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.tianji.learning.domain.po.PointsBoard;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * @author Encounter
@@ -11,4 +12,11 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface PointsBoardMapper extends BaseMapper<PointsBoard>
     {
+        /**
+         * 创建积分板表
+         *
+         * @param tableName 表名称
+         */
+        void createPointsBoardTable(@Param("tableName") String tableName);
+        
     }

@@ -111,7 +111,7 @@ public class SignRecordServiceImpl extends ServiceImpl<SignRecordMapper, SignRec
                 int dayOfMonth = now.getDayOfMonth();
                 List<Long> result = redisTemplate.opsForValue()
                         .bitField(key, BitFieldSubCommands.create()
-                                .get(BitFieldSubCommands.BitFieldType.signed(dayOfMonth - 1)).valueAt(0));
+                                .get(BitFieldSubCommands.BitFieldType.signed(dayOfMonth)).valueAt(0));
                 
                 if (CollUtils.isEmpty(result))
                     {

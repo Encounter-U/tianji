@@ -5,6 +5,7 @@ import com.tianji.learning.domain.po.PointsRecord;
 import com.tianji.learning.domain.vo.PointsStatisticsVO;
 import com.tianji.learning.enums.PointsRecordType;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -30,4 +31,21 @@ public interface IPointsRecordService extends IService<PointsRecord>
          * @return {@link List }<{@link PointsStatisticsVO }>
          */
         List<PointsStatisticsVO> queryTodayPoints();
+        
+        /**
+         * 按赛季创建积分记录表
+         *
+         * @param season 季节
+         */
+        void createPointsRecordTableBySeason(Integer season);
+        
+        List<PointsRecord> queryLastMonthPointsRecord(int pageNo, int pageSize, LocalDateTime begin, LocalDateTime end);
+        
+        /**
+         * 删除原表中上个赛季的积分明细
+         *
+         * @param begin 开始
+         * @param end   结束
+         */
+        void removeByTime(LocalDateTime begin, LocalDateTime end);
     }

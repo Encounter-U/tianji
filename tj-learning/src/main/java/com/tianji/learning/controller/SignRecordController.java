@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Encounter
  * @date 2024/12/02 15:59<br/>
  */
-@RequestMapping("/sign_records")
+@RequestMapping("/sign-records")
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "签到记录", description = "签到记录相关接口")

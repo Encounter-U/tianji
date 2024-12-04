@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.tianji.learning.domain.po.PointsBoardSeason;
 import com.tianji.learning.domain.vo.PointsBoardSeasonVO;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -18,4 +19,12 @@ public interface IPointsBoardSeasonService extends IService<PointsBoardSeason>
          * @return {@link List }<{@link PointsBoardSeasonVO }>
          */
         List<PointsBoardSeasonVO> listBeforeNow();
+        
+        /**
+         * 查询赛季id由时间
+         *
+         * @param time 时间
+         * @return {@link Integer }
+         */
+        Integer querySeasonByTime(LocalDateTime time);
     }

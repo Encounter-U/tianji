@@ -1,21 +1,26 @@
 package com.tianji.learning.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tianji.common.utils.CollUtils;
 import com.tianji.common.utils.DateUtils;
 import com.tianji.common.utils.UserContext;
+import com.tianji.learning.constants.RedisConstants;
 import com.tianji.learning.domain.po.PointsRecord;
 import com.tianji.learning.domain.vo.PointsStatisticsVO;
 import com.tianji.learning.enums.PointsRecordType;
 import com.tianji.learning.mapper.PointsRecordMapper;
 import com.tianji.learning.service.IPointsRecordService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.tianji.learning.constants.LearningConstants.POINTS_RECORD_TABLE_PREFIX;
 
 /**
  * @author Encounter
@@ -26,6 +31,7 @@ import java.util.List;
 public class PointsRecordServiceImpl extends ServiceImpl<PointsRecordMapper, PointsRecord> implements IPointsRecordService
     {
         private final PointsRecordMapper recordMapper;
+        private final StringRedisTemplate redisTemplate;
         
         /**
          * 添加积分记录
@@ -70,6 +76,10 @@ public class PointsRecordServiceImpl extends ServiceImpl<PointsRecordMapper, Poi
                 record.setPoints(realPoints);
                 record.setType(type);
                 save(record);
+                
+                //更新积分到redis
+                String key = RedisConstants.POINTS_RECORD_KEY_PREFIX + now.format(DateUtils.SIGN_DATE_SUFFIX_FORMATTER);
+                redisTemplate.opsForZSet().incrementScore(key, String.valueOf(userId), realPoints);
             }
         
         /**
@@ -114,6 +124,49 @@ public class PointsRecordServiceImpl extends ServiceImpl<PointsRecordMapper, Poi
                         result.add(vo);
                     }
                 return result;
+            }
+        
+        /**
+         * 按赛季创建积分记录表
+         *
+         * @param season 赛季
+         */
+        @Override
+        public void createPointsRecordTableBySeason(Integer season)
+            {
+                recordMapper.createPointsRecordTableBySeason(POINTS_RECORD_TABLE_PREFIX + season);
+            }
+        
+        /**
+         * 查询上个月积分记录
+         *
+         * @param pageNo   页码
+         * @param pageSize 页面大小
+         * @param begin    开始
+         * @param end      结束
+         * @return {@link List }<{@link PointsRecord }>
+         */
+        @Override
+        public List<PointsRecord> queryLastMonthPointsRecord(int pageNo, int pageSize, LocalDateTime begin, LocalDateTime end)
+            {
+                Page<PointsRecord> page = lambdaQuery()
+                        .between(begin != null && end != null, PointsRecord::getCreateTime, begin, end)
+                        .page(Page.of(pageNo, pageSize));
+                return page.getRecords();
+            }
+        
+        /**
+         * 删除原表中上个赛季的积分明细
+         *
+         * @param begin 开始
+         * @param end   结束
+         */
+        @Override
+        public void removeByTime(LocalDateTime begin, LocalDateTime end)
+            {
+                lambdaUpdate()
+                        .between(PointsRecord::getCreateTime, begin, end)
+                        .remove();
             }
         
         /**

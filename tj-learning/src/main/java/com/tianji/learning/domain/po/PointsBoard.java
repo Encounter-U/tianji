@@ -29,7 +29,7 @@ public class PointsBoard implements Serializable
         /**
          * 榜单id
          */
-        @TableId(value = "id", type = IdType.ASSIGN_ID)
+        @TableId(value = "id", type = IdType.INPUT)
         @Schema(description = "榜单id")
         private Long id;
         /**
@@ -47,13 +47,13 @@ public class PointsBoard implements Serializable
         /**
          * 名次，只记录赛季前100
          */
-        @TableField(value = "`rank`")
+        @TableField(value = "`rank`", exist = false)
         @Schema(description = "名次，只记录赛季前100")
         private Integer rank;
         /**
          * 赛季，例如 1,就是第一赛季，2-就是第二赛季
          */
-        @TableField(value = "season")
+        @TableField(value = "season", exist = false)
         @Schema(description = "赛季，例如 1,就是第一赛季，2-就是第二赛季")
         private Integer season;
     }

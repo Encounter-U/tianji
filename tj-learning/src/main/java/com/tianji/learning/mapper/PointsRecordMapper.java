@@ -35,4 +35,10 @@ public interface PointsRecordMapper extends BaseMapper<PointsRecord>
         @Select("select type,sum(points) as points from points_record ${ew.customSqlSegment} group by type")
         List<PointsRecord> queryByUserAndDate(@Param(Constants.WRAPPER) QueryWrapper<PointsRecord> wrapper);
         
+        /**
+         * 按赛季创建积分记录表
+         *
+         * @param tableName 表名
+         */
+        void createPointsRecordTableBySeason(@Param("tableName") String tableName);
     }
