@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tianji.promotion.mapper.CouponMapper">
+    <resultMap id="BaseResultMap" type="com.tianji.promotion.domain.po.Coupon">
+        <!--@mbg.generated-->
+        <!--@Table tj_promotion.coupon-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="type" jdbcType="TINYINT" property="type"/>
+        <result column="discount_type" jdbcType="TINYINT" property="discountType"/>
+        <result column="specific" jdbcType="BIT" property="specific"/>
+        <result column="discount_value" jdbcType="INTEGER" property="discountValue"/>
+        <result column="threshold_amount" jdbcType="INTEGER" property="thresholdAmount"/>
+        <result column="max_discount_amount" jdbcType="INTEGER" property="maxDiscountAmount"/>
+        <result column="obtain_way" jdbcType="TINYINT" property="obtainWay"/>
+        <result column="issue_begin_time" jdbcType="TIMESTAMP" property="issueBeginTime"/>
+        <result column="issue_end_time" jdbcType="TIMESTAMP" property="issueEndTime"/>
+        <result column="term_days" jdbcType="INTEGER" property="termDays"/>
+        <result column="term_begin_time" jdbcType="TIMESTAMP" property="termBeginTime"/>
+        <result column="term_end_time" jdbcType="TIMESTAMP" property="termEndTime"/>
+        <result column="status" jdbcType="TINYINT" property="status"/>
+        <result column="total_num" jdbcType="INTEGER" property="totalNum"/>
+        <result column="issue_num" jdbcType="INTEGER" property="issueNum"/>
+        <result column="used_num" jdbcType="INTEGER" property="usedNum"/>
+        <result column="user_limit" jdbcType="INTEGER" property="userLimit"/>
+        <result column="ext_param" jdbcType="VARCHAR" property="extParam"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="creater" jdbcType="BIGINT" property="creater"/>
+        <result column="updater" jdbcType="BIGINT" property="updater"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id, `name`, `type`, discount_type, `specific`, discount_value, threshold_amount,
+        max_discount_amount, obtain_way, issue_begin_time, issue_end_time, term_days, term_begin_time,
+        term_end_time, `status`, total_num, issue_num, used_num, user_limit, ext_param, create_time,
+        update_time, creater, updater
+    </sql>
+</mapper>
