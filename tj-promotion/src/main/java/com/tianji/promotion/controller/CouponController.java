@@ -6,6 +6,7 @@ import com.tianji.promotion.domain.dto.CouponIssueFormDTO;
 import com.tianji.promotion.domain.query.CouponQuery;
 import com.tianji.promotion.domain.vo.CouponDetailVO;
 import com.tianji.promotion.domain.vo.CouponPageVO;
+import com.tianji.promotion.domain.vo.CouponVO;
 import com.tianji.promotion.service.ICouponService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * 优惠券的规则信息(tj_promotion.coupon)表控制层
@@ -108,10 +110,27 @@ public class CouponController
                 return couponService.getCouponById(id);
             }
         
+        /**
+         * 暂停发行优惠券
+         *
+         * @param id id
+         */
         @PutMapping("/{id}/pause")
         @Operation(summary = "暂停发放优惠券")
         public void pauseIssueCoupon(@PathVariable Long id)
             {
                 couponService.pauseIssueCoupon(id);
+            }
+        
+        /**
+         * 查询发行中的优惠券
+         *
+         * @return {@link List }<{@link CouponVO }>
+         */
+        @GetMapping("/list")
+        @Operation(summary = "查询发放中的优惠券")
+        public List<CouponVO> queryIssuingCoupon()
+            {
+                return couponService.queryIssuingCoupon();
             }
     }

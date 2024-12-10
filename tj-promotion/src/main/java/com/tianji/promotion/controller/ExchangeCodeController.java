@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+
 /**
  * 兑换码(tj_promotion.exchange_code)表控制层
  *
@@ -34,7 +36,7 @@ public class ExchangeCodeController
          */
         @GetMapping("/page")
         @Operation(summary = "分页查询兑换码")
-        public PageDTO<ExchangeCodeVO> pageQuery(CodeQuery query)
+        public PageDTO<ExchangeCodeVO> pageQuery(@Valid CodeQuery query)
             {
                 return codeService.pageQuery(query);
             }

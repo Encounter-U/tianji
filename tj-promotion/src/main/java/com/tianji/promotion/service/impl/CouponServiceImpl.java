@@ -2,7 +2,6 @@ package com.tianji.promotion.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.tianji.api.client.course.CategoryClient;
 import com.tianji.common.domain.dto.PageDTO;
 import com.tianji.common.exceptions.BadRequestException;
 import com.tianji.common.utils.BeanUtils;
@@ -17,12 +16,14 @@ import com.tianji.promotion.domain.query.CouponQuery;
 import com.tianji.promotion.domain.vo.CouponDetailVO;
 import com.tianji.promotion.domain.vo.CouponPageVO;
 import com.tianji.promotion.domain.vo.CouponScopeVO;
+import com.tianji.promotion.domain.vo.CouponVO;
 import com.tianji.promotion.enums.CouponStatus;
 import com.tianji.promotion.enums.ObtainType;
 import com.tianji.promotion.mapper.CouponMapper;
 import com.tianji.promotion.service.ICouponScopeService;
 import com.tianji.promotion.service.ICouponService;
 import com.tianji.promotion.service.IExchangeCodeService;
+import com.tianji.promotion.service.IUserCouponService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +38,7 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
     {
         private final ICouponScopeService scopeService;
         private final IExchangeCodeService codeService;
-        private final CategoryClient categoryClient;
+        private final IUserCouponService userCouponService;
         
         /**
          * 添加优惠券
@@ -277,6 +278,38 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
                     }
                 coupon.setStatus(CouponStatus.PAUSE);
                 updateById(coupon);
+            }
+        
+        /**
+         * 查询发行中的优惠券
+         *
+         * @return {@link List }<{@link CouponVO }>
+         */
+        @Override
+        public List<CouponVO> queryIssuingCoupon()
+            {
+                //查询发行中的优惠券
+                List<Coupon> coupons = lambdaQuery()
+                        .eq(Coupon::getStatus, CouponStatus.ISSUING)
+                        .eq(Coupon::getObtainWay, ObtainType.PUBLIC)
+                        .list();
+                //没有数据
+                if (CollUtils.isEmpty(coupons))
+                    {
+                        return CollUtils.emptyList();
+                    }
+                //转vo
+                return coupons.stream()
+                        .map(c ->
+                            {
+                                //查询已领取的数量
+                                Integer count = userCouponService.numberOfCouponsClaimed(c.getId());
+                                return BeanUtils.copyBean(c, CouponVO.class)
+                                        .setAvailable(c.getTotalNum() > c.getIssueNum()
+                                                && count < c.getUserLimit())
+                                        .setReceived(count > 0);
+                            })
+                        .collect(Collectors.toList());
             }
         
         /**

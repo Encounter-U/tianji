@@ -23,4 +23,13 @@ public interface IExchangeCodeService extends IService<ExchangeCode>
          * @return {@link PageDTO }<{@link ExchangeCodeVO }>
          */
         PageDTO<ExchangeCodeVO> pageQuery(CodeQuery query);
+        
+        /**
+         * 更新兑换码状态
+         *
+         * @param serialNum 序列号
+         * @param mark      状态
+         * @return boolean
+         */
+        boolean updateExchangeMark(long serialNum, boolean mark);
     }

@@ -16,6 +16,7 @@ import org.springframework.data.redis.core.BoundValueOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,7 @@ public class ExchangeCodeServiceImpl extends ServiceImpl<ExchangeCodeMapper, Exc
          */
         @Override
         @Async("generateExchangeCodeExecutor")
+        @Transactional
         public void asyncGenerateCode(Coupon coupon)
             {
                 //发放数量
@@ -71,7 +73,7 @@ public class ExchangeCodeServiceImpl extends ServiceImpl<ExchangeCodeMapper, Exc
                 saveBatch(codes);
                 
                 //写入redis
-                redisTemplate.opsForZSet().add(PromotionConstants.COUPON_CODE_SERIAL_KEY,
+                redisTemplate.opsForZSet().add(PromotionConstants.COUPON_RANGE_KEY,
                         coupon.getId().toString(), maxSerialNum);
             }
         
@@ -107,5 +109,21 @@ public class ExchangeCodeServiceImpl extends ServiceImpl<ExchangeCodeMapper, Exc
                 
                 //返回
                 return PageDTO.of(page, vos);
+            }
+        
+        /**
+         * 更新兑换码状态
+         *
+         * @param serialNum 序列号
+         * @param mark      状态
+         * @return boolean
+         */
+        @Override
+        public boolean updateExchangeMark(long serialNum, boolean mark)
+            {
+                Boolean b = redisTemplate
+                        .opsForValue()
+                        .setBit(PromotionConstants.COUPON_CODE_MAP_KEY, serialNum, mark);
+                return b != null && b;
             }
     }

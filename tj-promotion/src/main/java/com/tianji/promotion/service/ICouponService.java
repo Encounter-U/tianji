@@ -8,8 +8,10 @@ import com.tianji.promotion.domain.po.Coupon;
 import com.tianji.promotion.domain.query.CouponQuery;
 import com.tianji.promotion.domain.vo.CouponDetailVO;
 import com.tianji.promotion.domain.vo.CouponPageVO;
+import com.tianji.promotion.domain.vo.CouponVO;
 
 import javax.validation.Valid;
+import java.util.List;
 
 public interface ICouponService extends IService<Coupon>
     {
@@ -63,4 +65,11 @@ public interface ICouponService extends IService<Coupon>
          * @param id id
          */
         void pauseIssueCoupon(Long id);
+        
+        /**
+         * 查询发行优惠券
+         *
+         * @return {@link List }<{@link CouponVO }>
+         */
+        List<CouponVO> queryIssuingCoupon();
     }
