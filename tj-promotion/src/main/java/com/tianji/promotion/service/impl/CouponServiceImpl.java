@@ -4,14 +4,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tianji.common.domain.dto.PageDTO;
 import com.tianji.common.exceptions.BadRequestException;
-import com.tianji.common.utils.BeanUtils;
-import com.tianji.common.utils.CollUtils;
-import com.tianji.common.utils.StringUtils;
-import com.tianji.common.utils.UserContext;
+import com.tianji.common.utils.*;
+import com.tianji.promotion.constants.PromotionConstants;
 import com.tianji.promotion.domain.dto.CouponFormDTO;
 import com.tianji.promotion.domain.dto.CouponIssueFormDTO;
 import com.tianji.promotion.domain.po.Coupon;
 import com.tianji.promotion.domain.po.CouponScope;
+import com.tianji.promotion.domain.po.UserCoupon;
 import com.tianji.promotion.domain.query.CouponQuery;
 import com.tianji.promotion.domain.vo.CouponDetailVO;
 import com.tianji.promotion.domain.vo.CouponPageVO;
@@ -25,11 +24,14 @@ import com.tianji.promotion.service.ICouponService;
 import com.tianji.promotion.service.IExchangeCodeService;
 import com.tianji.promotion.service.IUserCouponService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +41,7 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
         private final ICouponScopeService scopeService;
         private final IExchangeCodeService codeService;
         private final IUserCouponService userCouponService;
+        private final StringRedisTemplate redisTemplate;
         
         /**
          * 添加优惠券
@@ -71,7 +74,10 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
                     }
                 //转换为po
                 List<CouponScope> collect = scopes.stream()
-                        .map(b -> new CouponScope().setBizId(b).setCouponId(couponId))
+                        .map(b -> new CouponScope()
+                                .setBizId(b)
+                                .setCouponId(couponId)
+                                .setType(b < 3000 ? 1 : 2))
                         .collect(Collectors.toList());
                 //保存
                 scopeService.saveBatch(collect);
@@ -151,12 +157,50 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
                 //开始发放
                 updateById(update);
                 
+                //添加缓存，前提是立刻发放的
+                if (isBegin)
+                    {
+                        coupon.setIssueBeginTime(update.getIssueBeginTime());
+                        coupon.setIssueEndTime(update.getIssueEndTime());
+                        cacheCouponInfo(coupon);
+                    }
+                
                 //判断是否需要生成兑换码，优惠券类型必须是兑换码，优惠券状态必须是待发放
                 if (coupon.getObtainWay() == ObtainType.ISSUE && coupon.getStatus() == CouponStatus.DRAFT)
                     {
                         coupon.setIssueEndTime(update.getIssueEndTime());
                         codeService.asyncGenerateCode(coupon);
                     }
+            }
+        
+        /**
+         * 暂停发行优惠券
+         *
+         * @param id id
+         */
+        @Override
+        public void pauseIssueCoupon(Long id)
+            {
+                Coupon coupon = getById(id);
+                if (coupon == null)
+                    {
+                        throw new BadRequestException("优惠券不存在");
+                    }
+                CouponStatus status = coupon.getStatus();
+                if (status != CouponStatus.ISSUING && status != CouponStatus.UN_ISSUE)
+                    {
+                        throw new BadRequestException("优惠券状态不正确");
+                    }
+                coupon.setStatus(CouponStatus.PAUSE);
+                boolean success = updateById(coupon);
+                if (!success)
+                    {
+                        log.error("暂停发行优惠券失败");
+                        throw new BadRequestException("暂停发行优惠券失败");
+                    }
+                
+                //删除缓存
+                redisTemplate.delete(PromotionConstants.COUPON_CACHE_KEY_PREFIX + id);
             }
         
         /**
@@ -260,27 +304,6 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
             }
         
         /**
-         * 暂停发行优惠券
-         *
-         * @param id id
-         */
-        @Override
-        public void pauseIssueCoupon(Long id)
-            {
-                Coupon coupon = getById(id);
-                if (coupon == null)
-                    {
-                        throw new BadRequestException("优惠券不存在");
-                    }
-                if (coupon.getStatus() != CouponStatus.ISSUING)
-                    {
-                        throw new BadRequestException("优惠券状态不正确");
-                    }
-                coupon.setStatus(CouponStatus.PAUSE);
-                updateById(coupon);
-            }
-        
-        /**
          * 查询发行中的优惠券
          *
          * @return {@link List }<{@link CouponVO }>
@@ -303,13 +326,35 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
                         .map(c ->
                             {
                                 //查询已领取的数量
-                                Integer count = userCouponService.numberOfCouponsClaimed(c.getId());
+                                Integer count = userCouponService.lambdaQuery()
+                                        .eq(UserCoupon::getCouponId, c.getId())
+                                        .eq(UserCoupon::getUserId, UserContext.getUser())
+                                        .count();
                                 return BeanUtils.copyBean(c, CouponVO.class)
                                         .setAvailable(c.getTotalNum() > c.getIssueNum()
                                                 && count < c.getUserLimit())
                                         .setReceived(count > 0);
                             })
                         .collect(Collectors.toList());
+            }
+        
+        /**
+         * 缓存优惠券信息
+         *
+         * @param coupon 优惠券
+         */
+        private void cacheCouponInfo(Coupon coupon)
+            {
+                //封装数据
+                Map<String, String> map = new HashMap<>();
+                map.put("issueBeginTime", String.valueOf(DateUtils.toEpochMilli(coupon.getIssueBeginTime())));
+                map.put("issueEndTime", String.valueOf(DateUtils.toEpochMilli(coupon.getIssueEndTime())));
+                map.put("totalNum", String.valueOf(coupon.getTotalNum()));
+                map.put("userLimit", String.valueOf(coupon.getUserLimit()));
+                
+                //缓存优惠券信息
+                redisTemplate.opsForHash()
+                        .putAll(PromotionConstants.USER_COUPON_CACHE_KEY_PREFIX + coupon.getId(), map);
             }
         
         /**

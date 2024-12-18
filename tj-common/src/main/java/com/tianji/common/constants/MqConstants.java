@@ -24,6 +24,9 @@ public interface MqConstants {
 
          /*点赞记录有关的交换机*/
         String LIKE_RECORD_EXCHANGE = "like.record.topic";
+        
+        /*优惠促销有关的交换机*/
+        String PROMOTION_EXCHANGE = "promotion.topic";
     }
     interface Queue {
         String ERROR_QUEUE_TEMPLATE = "error.{}.queue";
@@ -74,5 +77,8 @@ public interface MqConstants {
         
         /*删除点赞的RoutingKey*/
         String QA_LIKED_RECORD_DELETE_KEY = "qa.liked.record.delete";
+        
+        /*领取优惠券的RoutingKey*/
+        String COUPON_RECEIVE = "coupon.receive";
     }
 }

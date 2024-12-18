@@ -2,22 +2,13 @@ package com.tianji.promotion.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tianji.common.domain.dto.PageDTO;
-import com.tianji.promotion.domain.po.Coupon;
+import com.tianji.promotion.domain.dto.UserCouponDTO;
 import com.tianji.promotion.domain.po.UserCoupon;
 import com.tianji.promotion.domain.query.UserCouponQuery;
 import com.tianji.promotion.domain.vo.CouponVO;
 
 public interface IUserCouponService extends IService<UserCoupon>
     {
-        
-        /**
-         * 当前用户已领取优惠券的数量
-         *
-         * @param couponId 优惠券id
-         * @return boolean
-         */
-        Integer numberOfCouponsClaimed(Long couponId);
-        
         /**
          * 用户端领取优惠券
          *
@@ -35,11 +26,9 @@ public interface IUserCouponService extends IService<UserCoupon>
         /**
          * 检查和创造用户优惠券
          *
-         * @param coupon    优惠券
-         * @param userId    用户id
-         * @param serialNum 序列号
+         * @param userCouponDTO 用户优惠券DTO
          */
-        void checkAndCreatUserCoupon(Coupon coupon, Long userId, Integer serialNum);
+        void checkAndCreatUserCoupon(UserCouponDTO userCouponDTO);
         
         /**
          * 分页查询我的优惠券

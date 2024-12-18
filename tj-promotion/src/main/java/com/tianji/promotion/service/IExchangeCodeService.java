@@ -32,4 +32,12 @@ public interface IExchangeCodeService extends IService<ExchangeCode>
          * @return boolean
          */
         boolean updateExchangeMark(long serialNum, boolean mark);
+        
+        /**
+         * 根据兑换码id获取优惠券id
+         *
+         * @param serialNum 序列号
+         * @return {@link Long }
+         */
+        Long exchangeTargetId(long serialNum);
     }

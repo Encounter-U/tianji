@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -125,5 +126,27 @@ public class ExchangeCodeServiceImpl extends ServiceImpl<ExchangeCodeMapper, Exc
                         .opsForValue()
                         .setBit(PromotionConstants.COUPON_CODE_MAP_KEY, serialNum, mark);
                 return b != null && b;
+            }
+        
+        /**
+         * 根据兑换码id获取优惠券id
+         *
+         * @param serialNum 兑换码id
+         * @return {@link Long }
+         */
+        @Override
+        public Long exchangeTargetId(long serialNum)
+            {
+                //查询score值比当前序列号大的第一个优惠券
+                Set<String> result = redisTemplate.opsForZSet().rangeByScore(
+                        PromotionConstants.COUPON_RANGE_KEY, serialNum, serialNum + 5000, 0L, 1L);
+                
+                if (CollUtils.isEmpty(result))
+                    {
+                        return null;
+                    }
+                
+                //数据转换
+                return Long.parseLong(result.iterator().next());
             }
     }
